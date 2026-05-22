@@ -1,0 +1,4 @@
+packages:
+  - backend
+allowBuilds:
+  mongodb-memory-server: true

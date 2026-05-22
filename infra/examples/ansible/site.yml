@@ -1,0 +1,79 @@
+---
+- name: Configure iot-cloud-monitor API service
+  hosts: app
+  become: true
+  vars:
+    iot_cloud_monitor_user: iot-cloud-monitor
+    iot_cloud_monitor_group: iot-cloud-monitor
+    iot_cloud_monitor_repo: 'https://github.com/oaslananka/iot-cloud-monitor.git'
+    iot_cloud_monitor_dir: /opt/iot-cloud-monitor
+    iot_cloud_monitor_env_file: /etc/iot-cloud-monitor/backend.env
+
+  tasks:
+    - name: Install system packages
+      ansible.builtin.apt:
+        name:
+          - git
+          - ca-certificates
+        state: present
+        update_cache: true
+
+    - name: Create service group
+      ansible.builtin.group:
+        name: '{{ iot_cloud_monitor_group }}'
+        system: true
+
+    - name: Create service user
+      ansible.builtin.user:
+        name: '{{ iot_cloud_monitor_user }}'
+        group: '{{ iot_cloud_monitor_group }}'
+        create_home: false
+        shell: /usr/sbin/nologin
+        system: true
+
+    - name: Create application directory
+      ansible.builtin.file:
+        path: '{{ iot_cloud_monitor_dir }}'
+        state: directory
+        owner: '{{ iot_cloud_monitor_user }}'
+        group: '{{ iot_cloud_monitor_group }}'
+        mode: '0755'
+
+    - name: Clone repository
+      ansible.builtin.git:
+        repo: '{{ iot_cloud_monitor_repo }}'
+        dest: '{{ iot_cloud_monitor_dir }}'
+        version: main
+        update: true
+      become_user: '{{ iot_cloud_monitor_user }}'
+      notify: Restart iot-cloud-monitor
+
+    - name: Install production dependencies
+      ansible.builtin.command:
+        cmd: pnpm install --prod --frozen-lockfile
+        chdir: '{{ iot_cloud_monitor_dir }}'
+      become_user: '{{ iot_cloud_monitor_user }}'
+      changed_when: false
+
+    - name: Install systemd unit
+      ansible.builtin.template:
+        src: iot-cloud-monitor.service.j2
+        dest: /etc/systemd/system/iot-cloud-monitor.service
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart iot-cloud-monitor
+
+    - name: Enable service
+      ansible.builtin.systemd_service:
+        name: iot-cloud-monitor
+        enabled: true
+        state: started
+        daemon_reload: true
+
+  handlers:
+    - name: Restart iot-cloud-monitor
+      ansible.builtin.systemd_service:
+        name: iot-cloud-monitor
+        state: restarted
+        daemon_reload: true

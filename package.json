@@ -1,0 +1,35 @@
+{
+  "name": "iot-cloud-monitor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "iot-cloud-monitor repository workspace.",
+  "license": "MIT",
+  "packageManager": "pnpm@11.2.2",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=11.2 <12"
+  },
+  "scripts": {
+    "dev": "pnpm --dir backend dev",
+    "start": "pnpm --dir backend start",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "typecheck": "node scripts/check-js.js",
+    "test": "pnpm --dir backend test",
+    "test:unit": "pnpm --dir backend test:unit",
+    "test:integration": "pnpm --dir backend test:integration",
+    "build": "node scripts/check-js.js",
+    "security": "pnpm audit --audit-level high",
+    "ci": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run security && pnpm run workflow:lint && pnpm run release:preflight",
+    "workflow:lint": "node scripts/check-workflows.js",
+    "release:preflight": "node scripts/release-preflight.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.4.0",
+    "globals": "17.6.0",
+    "prettier": "3.8.3",
+    "yaml": "2.9.0"
+  }
+}

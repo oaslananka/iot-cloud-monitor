@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+bower_components/
+
+# Build, cache, and coverage output
+dist/
+build/
+coverage/
+.nyc_output/
+.cache/
+.grunt/
+lib-cov/
+
+# Logs and runtime data
+logs/
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+pids/
+*.pid
+*.seed
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+.npmrc
+.pypirc
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# Local editor and OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local agent checkpoints
+.codex-checkpoints/

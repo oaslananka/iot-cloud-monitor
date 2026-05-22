@@ -1,0 +1,18 @@
+repos:
+  - repo: local
+    hooks:
+      - id: format-check
+        name: format check
+        entry: pnpm run format:check
+        language: system
+        pass_filenames: false
+      - id: lint
+        name: lint
+        entry: pnpm run lint
+        language: system
+        pass_filenames: false
+      - id: test
+        name: tests
+        entry: pnpm run test
+        language: system
+        pass_filenames: false

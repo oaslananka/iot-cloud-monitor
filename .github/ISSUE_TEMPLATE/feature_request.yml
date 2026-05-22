@@ -1,0 +1,18 @@
+name: Feature request
+description: Propose a project improvement
+title: 'feat: '
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should the project support?
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Relevant constraints or examples.

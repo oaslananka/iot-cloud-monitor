@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  release-please:
+    name: Release / release-please
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  release-assets:
+    name: Release / assets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    needs:
+      - release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+      - name: Setup pnpm
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.2.2 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Verify repository
+        run: pnpm run ci
+      - name: Build release assets
+        env:
+          VERSION: ${{ needs.release-please.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist/release
+          git archive --format=tar.gz --output "dist/release/iot-cloud-monitor-${VERSION}.tar.gz" HEAD
+          pnpm sbom \
+            --sbom-format cyclonedx \
+            --sbom-type application \
+            > "dist/release/iot-cloud-monitor-${VERSION}.cdx.json"
+          cd dist/release
+          sha256sum \
+            "iot-cloud-monitor-${VERSION}.tar.gz" \
+            "iot-cloud-monitor-${VERSION}.cdx.json" \
+            > "iot-cloud-monitor-${VERSION}.sha256"
+      - name: Attest release assets
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32
+        with:
+          subject-path: dist/release/*
+      - name: Attach assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+        run: gh release upload "$TAG_NAME" dist/release/* --clobber
