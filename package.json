@@ -4,7 +4,7 @@
   "private": true,
   "description": "iot-cloud-monitor repository workspace.",
   "license": "MIT",
-  "packageManager": "pnpm@11.2.2",
+  "packageManager": "pnpm@11.4.0",
   "engines": {
     "node": ">=24 <25",
     "pnpm": ">=11.2 <12"
