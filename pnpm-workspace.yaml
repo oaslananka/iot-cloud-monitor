@@ -1,4 +1,11 @@
 packages:
   - backend
+
+catalog:
+  form-data: ^4.0.6
+
+overrides:
+  form-data: ^4.0.6
+
 allowBuilds:
   mongodb-memory-server: true
